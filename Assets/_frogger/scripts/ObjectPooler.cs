@@ -31,7 +31,21 @@ public class ObjectPooler : MonoBehaviour
 
     void Awake()
     {
-        //SharedInstance = this;
+        SharedInstance = this;
+        InitPooler();
+    }
+
+    private void Start()
+    {
+
+    }
+
+    public void InitPooler()
+    {
+        foreach (PoolItem item in poolItems)
+        {
+            SetItemPool(item);
+        }
     }
 
     public void SetPooler(PoolItem item)
@@ -52,27 +66,34 @@ public class ObjectPooler : MonoBehaviour
         foreach (PoolItem item in poolItems)
         {
             SetItemPool(item);
-            //
         }
     }
 
     private void SetItemPool(PoolItem item)
     {
+        item.pooledObjects = new List<GameObject>();
+
         for (int i = 0; i < item.amountToPool; i++)
         {
-            GameObject obj = (GameObject)Instantiate(item.objectToPool);
-            obj.SetActive(false);
-            item.pooledObjects = new List<GameObject>();
-            item.pooledObjects.Add(obj);
+            CreateItem(item);
         }
+    }
+
+    private GameObject CreateItem(PoolItem item)
+    {
+        GameObject obj = (GameObject)Instantiate(item.objectToPool);
+        obj.SetActive(false);
+        item.pooledObjects.Add(obj);
+        return obj;
     }
 
     public GameObject GetPooledObject(string value)
     {
         PoolItem itemSelected = poolItems.Find(i => i.name == value);
+
         if(itemSelected != null)
         {
-            for (int i = 0; i <itemSelected.pooledObjects.Count; i++)
+            for (int i = 0; i < itemSelected.pooledObjects.Count; i++)
             {
                 if (!itemSelected.pooledObjects[i].activeInHierarchy)
                 {
@@ -80,21 +101,14 @@ public class ObjectPooler : MonoBehaviour
                 }
             }
 
-            foreach (PoolItem item in poolItems)
+            if (itemSelected.shouldExpand)
             {
-                if (item.objectToPool.tag == tag)
-                {
-                    if (item.shouldExpand)
-                    {
-                        GameObject obj = (GameObject)Instantiate(item.objectToPool);
-                        obj.SetActive(false);
-                        item.pooledObjects.Add(obj);
-                        return obj;
-                    }
-                }
+                //GameObject obj = (GameObject)Instantiate(itemSelected.objectToPool);
+                //obj.SetActive(false);
+                //itemSelected.pooledObjects.Add(obj);
+                return CreateItem(itemSelected);
             }
         }
-
 
         return null;
     }
