@@ -6,7 +6,8 @@ using UnityEngine;
 
 public class Disabler : MonoBehaviour
 {
-    public Action<Trunk> OnDisabler;
+    public Action<Trunk> OnDisablerTrunk;
+    public Action<Obstacle> OnDisablerObstacle;
 
     private void OnTriggerEnter(Collider other)
     {
@@ -15,7 +16,15 @@ public class Disabler : MonoBehaviour
         if (platformSelected != null)
         {
             other.gameObject.SetActive(false);
-            OnDisabler?.Invoke(platformSelected);
+            OnDisablerTrunk?.Invoke(platformSelected);
+        }
+
+        Obstacle obstacleSelected = other.gameObject.GetComponent<Obstacle>();
+
+        if (obstacleSelected != null)
+        {
+            other.gameObject.SetActive(false);
+            OnDisablerObstacle?.Invoke(obstacleSelected);
         }
     }
 }

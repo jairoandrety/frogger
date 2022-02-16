@@ -1,9 +1,14 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+
 using UnityEngine;
 
 public class Frog : MonoBehaviour
 {
+    public Action OnDead;
+    public Action OnGrounded;
+
     [SerializeField] private Jumper body;
 
     [SerializeField] private float movementSpeed = 0;
@@ -16,11 +21,11 @@ public class Frog : MonoBehaviour
 
     private bool isMove = false;
     private float distance = 0;
-
     private Rigidbody rigidbody;
-
     private IEnumerator MovementCoroutine = null;
     //private IEnumerator JumpCoroutine = null;
+
+    private Vector3 initialPos = Vector3.zero;
 
     public bool IsMove { get => isMove; }
     public Jumper Body { get => body; }
@@ -30,7 +35,10 @@ public class Frog : MonoBehaviour
     void Start()
     {
         rigidbody = body.GetComponent<Rigidbody>();
-        body.OnGounded += Grounded;
+        body.OnGrounded += Grounded;
+        body.OnDead += Dead;
+
+        initialPos = transform.position;
     }
 
     void Update()
@@ -60,6 +68,12 @@ public class Frog : MonoBehaviour
     }
     #endregion
 
+    private void Dead()
+    {
+        Debug.Log("dead");
+        OnDead?.Invoke();
+    }
+
     private void Grounded()
     {
         isMove = false;
@@ -68,8 +82,13 @@ public class Frog : MonoBehaviour
         if (MovementCoroutine != null)
             StopCoroutine(MovementCoroutine);
 
-        transform.position = target.transform.position;
-        body.transform.localRotation = Quaternion.LookRotation(direction, Vector3.up);
+        if(target!= null)
+        {
+            transform.position = target.transform.position;
+            body.transform.localRotation = Quaternion.LookRotation(direction, Vector3.up);
+        }            
+
+        OnGrounded?.Invoke();
     }    
 
     public void Move(GameObject target, Vector3 direction)
@@ -83,6 +102,7 @@ public class Frog : MonoBehaviour
 
         rigidbody.velocity = Vector3.up * jumpForce;
         body.IsGrounded = false;
+
         //this.target = transform.position + (direction * directionForce);
         this.target = target;
         this.direction = direction;
@@ -96,9 +116,12 @@ public class Frog : MonoBehaviour
         //StartCoroutine(JumpCoroutine);
     }  
     
-    public void Restart()
+    public void ResetValues()
     {
-
+        transform.SetParent(null);
+        target = null;
+        transform.position = initialPos;
+        //body.transform.localPosition = Vector3.zero;
     }
 
     #region Coroutines
